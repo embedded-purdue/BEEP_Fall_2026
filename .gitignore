@@ -53,3 +53,17 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+
+# ESP-IDF
+build/
+sdkconfig
+sdkconfig.old
+dependencies.lock
+managed_components/
+
+# Editor
+.vscode/
+
+# KiCad autosave junk (don't ship these to students)
+*-backups/
