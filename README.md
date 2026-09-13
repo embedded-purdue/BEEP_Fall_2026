@@ -10,7 +10,7 @@ New content drops every **Sunday** at **13:00**.
 | Week | Topic | Released |
 |---|---|---|
 | 1 | Embedded Basics | ✅ |
-| 2 | Architecture, Program State, Debouncing | ⬜ |
+| 2 | Architecture, Program State, Debouncing | ✅ |
 | 3 | Event-Driven Programming and Interrupts | ⬜ |
 | 4 | Timers and PWM | ⬜ |
 | 5 | Serial Communication Protocols | ⬜ |
