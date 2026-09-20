@@ -21,27 +21,34 @@ const char* TAG = "MAIN";
 #define ALARM_PERIOD 200 * 1000
 
 // Input pin config
+// TODO: Fill in the blanks. Same idea as last week, but this time we ALSO
+// need to enable interrupts on these pins. Buttons are active-low, so you
+// want the interrupt to fire on the falling edge (press), not the rising
+// edge (release). Look at gpio_int_type_t in the ESP-IDF docs for the
+// right enum value.
 gpio_config_t input_pin = {
     .pin_bit_mask = (1ULL << ARM_PIN) |
                     (1ULL << DISARM_PIN) |
                     (1ULL << CODE0_PIN) |
                     (1ULL << CODE1_PIN) |
                     (1ULL << SETCODE_PIN),
-    .mode = GPIO_MODE_INPUT,
-    .pull_up_en = GPIO_PULLUP_ENABLE,
-    .pull_down_en = GPIO_PULLDOWN_DISABLE,
-    .intr_type = GPIO_INTR_NEGEDGE
+    .mode = /* TODO */,
+    .pull_up_en = /* TODO */,
+    .pull_down_en = /* TODO */,
+    .intr_type = /* TODO: which edge? */
 };
 
 // Output pin config
+// TODO: Fill in the blanks (unchanged concept from last week - LEDs are
+// simple outputs, no pull resistors, no interrupts needed).
 gpio_config_t output_pin = {
     .pin_bit_mask = (1ULL << RED_LED_PIN) |
                     (1ULL << GREEN_LED_PIN) |
                     (1ULL << BLUE_LED_PIN),
-    .mode = GPIO_MODE_OUTPUT,
-    .pull_up_en = GPIO_PULLUP_DISABLE,
-    .pull_down_en = GPIO_PULLDOWN_DISABLE,
-    .intr_type = GPIO_INTR_DISABLE
+    .mode = /* TODO */,
+    .pull_up_en = /* TODO */,
+    .pull_down_en = /* TODO */,
+    .intr_type = /* TODO */
 };
 
 // Alarm variables
@@ -61,7 +68,8 @@ intmax_t previous_setcode_press = 0;
 intmax_t previous_code1_press = 0;
 intmax_t previous_code0_press = 0;
 
-//Flags for print statements
+// Flags for print statements - since we can't printf/log from an ISR, each
+// handler sets one of these and the main loop does the actual logging.
 volatile bool newly_armed = false;
 volatile bool newly_disarmed = false;
 volatile bool new_code_set = false;
@@ -91,80 +99,50 @@ bool debounce_check(intmax_t* last_press) {
 }
 
 // ------------------------ Interrupt Handlers -----------------------
+// Remember: ISRs must be SHORT. No printf/ESP_LOGI here - set a flag instead
+// and let the main loop do the logging. Also remember these fire on a FALLING
+// edge (press only), so you don't need to check gpio_get_level() inside them
+// the way you did with polling last week - if the ISR ran, the button was
+// just pressed.
 
 // ARM
+// TODO: If debounce passes AND the alarm isn't already armed/setting a code,
+// arm the alarm, set newly_armed = true, and reset guess_code.
 static void handle_arm_press(void *arg) {
-    if (!debounce_check(&previous_arm_press)) {return;}
-
-    if (!alarm_armed && !setting_code) {
-        alarm_armed = true;
-        newly_armed = true;
-        guess_code = 0b00000000;
-    }
+    // TODO: fill in
 }
 
 // DISARM
+// TODO: If debounce passes and the alarm is armed, compare guess_code to
+// code. Match -> disarm, clear alarm_triggered, reset guess_code, set
+// newly_disarmed. No match -> set alarm_triggered and newly_triggered.
 static void handle_disarm_press(void *arg) {
-    if (!debounce_check(&previous_disarm_press)) {return;}
-
-    if (alarm_armed) {
-        if (guess_code == code) {
-            alarm_armed = false;
-            alarm_triggered = false;
-            newly_disarmed = true;
-            guess_code = 0b00000000;
-        } else {
-            newly_triggered = true;
-            alarm_triggered = true;
-        }
-    }
+    // TODO: fill in
 }
 
 // SETCODE
+// TODO: If debounce passes: first press (not armed, not already setting)
+// enters setting_code mode and resets temp_code. Second press (setting_code
+// already true) saves temp_code into code, exits setting_code mode, and sets
+// new_code_set.
 static void handle_setcode_press(void *arg) {
-    if (!debounce_check(&previous_setcode_press)) {return;}
-
-    // first press
-    if (!alarm_armed && !setting_code) {
-        setting_code = true;
-        temp_code = 0;
-    }
-    // second press
-    else if (setting_code) {
-        code = temp_code;
-        setting_code = false;
-        new_code_set = true;
-    }
+    // TODO: fill in
 }
 
 // CODE 0
+// TODO: If debounce passes: while setting a code, shift a 0 bit into
+// temp_code. While armed (guessing), shift a 0 bit into guess_code.
 static void handle_code0_press(void *arg) {
-    if (!debounce_check(&previous_code0_press)) {return;}
-
-    // Code set press
-    if (setting_code) {
-        temp_code <<= 1;
-    }
-    // Code guess press
-    else if (alarm_armed) {
-        guess_code <<= 1;
-    }
+    // TODO: fill in
 }
 
 // CODE 1
+// TODO: Same as CODE 0's handler, but shifts in a 1 bit instead of a 0.
 static void handle_code1_press(void *arg) {
-    if (!debounce_check(&previous_code1_press)) {return;}
-
-    // Code set press
-    if (setting_code) {
-        temp_code = (temp_code << 1) | 1;
-    }
-    // Code guess press
-    else if (alarm_armed) {
-        guess_code = (guess_code << 1) | 1;
-    }
+    // TODO: fill in
 }
 
+// This function is unchanged from Week 2 - it's provided for you.
 void update_leds(void) {
     // Armed/Disarmed LEDs
     if (!alarm_triggered) {
@@ -183,15 +161,14 @@ void update_leds(void) {
     gpio_set_level(BLUE_LED_PIN, setting_code ? 1 : 0);
 }
 
-
+// TODO: Implement setup_gpio_irq.
+// You need to:
+//   1. Install the GPIO ISR service (gpio_install_isr_service) so the
+//      ESP-IDF can dispatch to a different handler per pin.
+//   2. Register each of the 5 handlers above to their matching pin with
+//      gpio_isr_handler_add(pin, handler_function, arg).
 void setup_gpio_irq() {
-    gpio_install_isr_service(ESP_INTR_FLAG_EDGE);
-
-    gpio_isr_handler_add(ARM_PIN,handle_arm_press,NULL);
-    gpio_isr_handler_add(DISARM_PIN,handle_disarm_press,NULL);
-    gpio_isr_handler_add(SETCODE_PIN,handle_setcode_press,NULL);
-    gpio_isr_handler_add(CODE0_PIN,handle_code0_press,NULL);
-    gpio_isr_handler_add(CODE1_PIN,handle_code1_press,NULL);
+    // TODO: fill in
 }
 
 // ------------------------ Main Application ------------------------

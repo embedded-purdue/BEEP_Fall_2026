@@ -11,7 +11,7 @@ New content drops every **Sunday** at **13:00**.
 |---|---|---|
 | 1 | Embedded Basics | ✅ |
 | 2 | Architecture, Program State, Debouncing | ✅ |
-| 3 | Event-Driven Programming and Interrupts | ⬜ |
+| 3 | Event-Driven Programming and Interrupts | ✅ |
 | 4 | Timers and PWM | ⬜ |
 | 5 | Serial Communication Protocols | ⬜ |
 | 6 | Analog ↔ Digital Conversions | ⬜ |
