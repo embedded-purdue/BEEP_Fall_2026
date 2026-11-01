@@ -16,4 +16,4 @@ New content drops every **Sunday** at **13:00**.
 | 5 | Serial Communication Protocols | ✅ |
 | 6 | Analog ↔ Digital Conversions | ✅ |
 | 7 | RTOS Basics | ⬜ |
-| 8 | Capstone Project | ⬜ |
+| 8 | Capstone Project | ✅ |
